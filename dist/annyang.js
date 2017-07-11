@@ -56,6 +56,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   var debugStyle = 'font-weight: bold; color: #00f;';
   var pauseListening = false;
   var _isListening = false;
+  var hotword = false;
+  var _setHotword = function _setHotword(sentence) {
+    hotword = sentence;
+
+    if (!Array.isArray(sentence)) {
+      hotword = [sentence];
+    }
+  };
 
   // The command matching code is a modified version of Backbone.Router by Jeremy Ashkenas, under the MIT license.
   var optionalParam = /\s*\((.*?)\)\s*/g;
@@ -114,13 +122,29 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     for (var i = 0; i < results.length; i++) {
       // the text recognized
       commandText = results[i].trim();
+      //check if the hotword is at the beginning of the word and remove if necessary
+      var found = false;
+      if (hotword) {
+        for (var j = 0; j < hotword.length; j++) {
+          if (commandText.indexOf(hotword[j]) === 0) {
+            //user HAS said the hotword
+            commandText = commandText.substring(hotword[j].toLowerCase().length).trim(); //remove the space after the hotword with +1
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          //nomatch ...
+          break;
+        }
+      }
       if (debugState) {
         logMessage('Speech recognized: %c' + commandText, debugStyle);
       }
 
       // try and match recognized text to one of the commands on the list
-      for (var j = 0, l = commandsList.length; j < l; j++) {
-        var currentCommand = commandsList[j];
+      for (var _j = 0, l = commandsList.length; _j < l; _j++) {
+        var currentCommand = commandsList[_j];
         var result = currentCommand.command.exec(commandText);
         if (result) {
           var parameters = result.slice(1);
@@ -298,6 +322,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
       if (options.continuous !== undefined) {
         recognition.continuous = !!options.continuous;
+      }
+      if (options.hotword !== undefined) {
+        if (options.hotword === false) {
+          _setHotword(!!options.hotword);
+        } else {
+          _setHotword(options.hotword);
+        }
       }
 
       lastStartedAt = new Date().getTime();
@@ -615,6 +646,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       parseResults(sentences);
+    },
+
+    /**
+     * Listen and execute only those commands that are started with a hotword.
+     * The command is just the input minus the hotword:
+     * e.g.: Jarvis, open the microwave!
+     *
+     * Can accept either a string containing a single word/sentence, or an array containing multiple words/sentences to be used
+     * as hotwords. If it is set to false, undefined, null etc. , no hotword is being used
+     *
+     * #### Examples:
+     * ````javascript
+     * annyang.setHotword('Computer');
+     * annyang.setHotword(
+     *     ['Spotify', 'YouTube', 'Jarvis']
+     *   );
+     * ````
+     *
+     * @param string|array sentences A sentence as a string or an array of strings of possible sentences or false/undefined for turning it off
+     * @returns undefined
+     * @method setHotword
+     */
+    setHotword: function setHotword(sentence) {
+      _setHotword(sentence);
     }
   };
 

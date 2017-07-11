@@ -52,6 +52,14 @@
   var debugStyle = 'font-weight: bold; color: #00f;';
   var pauseListening = false;
   var isListening = false;
+  var hotword = false;
+  var setHotword = function(sentence){
+    hotword = sentence;
+
+    if (!Array.isArray(sentence)) {
+      hotword = [sentence];
+    }
+  };
 
   // The command matching code is a modified version of Backbone.Router by Jeremy Ashkenas, under the MIT license.
   var optionalParam = /\s*\((.*?)\)\s*/g;
@@ -110,6 +118,22 @@
     for (let i = 0; i<results.length; i++) {
       // the text recognized
       commandText = results[i].trim();
+      //check if the hotword is at the beginning of the word and remove if necessary
+      let found = false;
+      if(hotword){
+        for(let j = 0; j<hotword.length;j++){
+          if(commandText.indexOf(hotword[j]) === 0){
+            //user HAS said the hotword
+            commandText = commandText.substring(hotword[j].toLowerCase().length).trim(); //remove the space after the hotword with +1
+            found = true;
+            break;
+          }
+        }
+        if(!found) {
+          //nomatch ...
+          break;
+        }
+      }
       if (debugState) {
         logMessage('Speech recognized: %c'+commandText, debugStyle);
       }
@@ -292,6 +316,13 @@
       }
       if (options.continuous !== undefined) {
         recognition.continuous = !!options.continuous;
+      }
+      if (options.hotword !== undefined) {
+        if (options.hotword === false){
+          setHotword(!!options.hotword);
+        }else {
+          setHotword(options.hotword);
+        }
       }
 
       lastStartedAt = new Date().getTime();
@@ -607,6 +638,30 @@
       }
 
       parseResults(sentences);
+    },
+
+    /**
+     * Listen and execute only those commands that are started with a hotword.
+     * The command is just the input minus the hotword:
+     * e.g.: Jarvis, open the microwave!
+     *
+     * Can accept either a string containing a single word/sentence, or an array containing multiple words/sentences to be used
+     * as hotwords. If it is set to false, undefined, null etc. , no hotword is being used
+     *
+     * #### Examples:
+     * ````javascript
+     * annyang.setHotword('Computer');
+     * annyang.setHotword(
+     *     ['Spotify', 'YouTube', 'Jarvis']
+     *   );
+     * ````
+     *
+     * @param string|array sentences A sentence as a string or an array of strings of possible sentences or false/undefined for turning it off
+     * @returns undefined
+     * @method setHotword
+     */
+    setHotword: function(sentence){
+      setHotword(sentence);
     }
   };
 

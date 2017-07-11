@@ -270,6 +270,31 @@ annyang.trigger(
 
 * undefined
 
+## setHotword(string|array)
+
+Listen and execute only those commands that are started with a hotword.
+The command is just the input minus the hotword:
+e.g.: Jarvis, open the microwave!
+
+Can accept either a string containing a single word/sentence, or an array containing multiple words/sentences to be used
+as hotwords. If it is set to false, undefined, null etc. , no hotword is being used
+
+#### Examples:
+````javascript
+annyang.setHotword('Computer');
+annyang.setHotword(
+    ['Spotify', 'YouTube', 'Jarvis']
+  );
+````
+
+### Params:
+
+* *string|array* sentences A sentence as a string or an array of strings of possible sentences or false/undefined for turning it off
+
+### Return:
+
+* undefined
+
 # Good to Know
 
 ## Commands Object
